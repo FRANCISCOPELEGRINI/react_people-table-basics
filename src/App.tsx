@@ -1,167 +1,190 @@
-import { Loader } from './components/Loader';
-
+// import { Loader } from './components/Loader';
+import {
+  Routes,
+  Route,
+  Link,
+  useLocation,
+  Navigate,
+  useNavigate,
+} from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import './App.scss';
+import Person from './types/Person';
 
-export const App = () => (
-  <div data-cy="app">
-    <nav
-      data-cy="nav"
-      className="navbar is-fixed-top has-shadow"
-      role="navigation"
-      aria-label="main navigation"
-    >
-      <div className="container">
-        <div className="navbar-brand">
-          <a className="navbar-item" href="#/">
-            Home
-          </a>
+const HomePage = () => <h1 className="title">Home Page</h1>;
 
-          <a
-            className="navbar-item has-background-grey-lighter"
-            href="#/people"
+const PageDontFound = () => <h1 className="title">Page not found</h1>;
+
+const getApi = () => {
+  return fetch('../public/api/people.json').then(result => {
+    if (!result.ok) {
+      throw new Error('Erro no get');
+    }
+
+    return result.json();
+  });
+};
+
+export const App = () => {
+  const [peopleList, setPeopleList] = useState<Person>([]);
+  const urlInformation = useLocation();
+  const [navigate, setNavigate] = useState<boolean>(true);
+  const possiblesUrls = ['/', '/people', '/home'];
+  const changeUrl = useNavigate();
+
+  useEffect(() => {
+    if (!possiblesUrls.includes(urlInformation.pathname)) {
+      changeUrl('/some/not/existing/page');
+    }
+  }, [urlInformation]);
+
+  const foundPathernName = (nomeDoCaba: string | boolean) => {
+    const person = peopleList.find((r: Person) => r.name === nomeDoCaba);
+
+    return person;
+  };
+
+  const getData = async () => {
+    let newData: Person = [];
+
+    try {
+      newData = await getApi();
+
+      setPeopleList(newData);
+    } catch (e: unknown) {
+      throw new Error('Erro Try catch' + e);
+    }
+  };
+
+  useEffect(() => {
+    setNavigate(false);
+  }, []);
+
+  const PeoplePage = () => {
+    useEffect(() => {
+      setNavigate(false);
+      getData();
+    }, []);
+
+    return (
+      <div className="block">
+        <h1 className="title">People Page</h1>
+        <div className="box table-container">
+          {/* <Loader /> */}
+
+          <p data-cy="peopleLoadingError" className="has-text-danger">
+            Something went wrong
+          </p>
+
+          <p data-cy="noPeopleMessage">There are no people on the server</p>
+
+          <table
+            data-cy="peopleTable"
+            className="table is-striped is-hoverable is-narrow is-fullwidth"
           >
-            People
-          </a>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Sex</th>
+                <th>Born</th>
+                <th>Died</th>
+                <th>Mother</th>
+                <th>Father</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {peopleList?.length && (
+                <>
+                  {peopleList.map((todo: Person, index: number) => {
+                    return (
+                      <tr
+                        data-cy="person"
+                        key={index}
+                        className={
+                          foundPathernName(todo.motherName) === undefined ||
+                          foundPathernName(todo.fatherName === undefined)
+                            ? 'has-background-warning'
+                            : ''
+                        }
+                      >
+                        <td>
+                          <a
+                            href={`#/people/${todo.slug}`}
+                            className={`${todo.sex === 'f' ? 'has-text-danger' : ''}`}
+                          >
+                            {todo.name}
+                          </a>
+                        </td>
+
+                        <td>{todo.sex}</td>
+                        <td>{todo.born}</td>
+                        <td>{todo.died}</td>
+
+                        <td>
+                          <a
+                            className="has-text-danger"
+                            href={`#/people/${foundPathernName(todo.motherName) !== undefined ? foundPathernName(todo.motherName).slug : ''}`}
+                          >
+                            {todo.motherName || '-'}
+                          </a>
+                        </td>
+
+                        <td>
+                          <a
+                            href={`#/people/${foundPathernName(todo.fatherName) !== undefined ? foundPathernName(todo.fatherName).slug : ''}`}
+                          >
+                            {todo.fatherName || '-'}
+                          </a>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-    </nav>
+    );
+  };
 
-    <main className="section">
-      <div className="container">
-        <h1 className="title">Home Page</h1>
-        <h1 className="title">People Page</h1>
-        <h1 className="title">Page not found</h1>
-
-        <div className="block">
-          <div className="box table-container">
-            <Loader />
-
-            <p data-cy="peopleLoadingError" className="has-text-danger">
-              Something went wrong
-            </p>
-
-            <p data-cy="noPeopleMessage">There are no people on the server</p>
-
-            <table
-              data-cy="peopleTable"
-              className="table is-striped is-hoverable is-narrow is-fullwidth"
+  return (
+    <div data-cy="app">
+      {navigate === true && <Navigate to="/"></Navigate>}
+      <nav
+        data-cy="nav"
+        className="navbar is-fixed-top has-shadow"
+        role="navigation"
+        aria-label="main navigation"
+      >
+        <div className="container">
+          <div className="navbar-brand">
+            <Link
+              to="/"
+              className={`navbar-item ${urlInformation.pathname === '/' ? 'has-background-grey-lighter' : ''}`}
             >
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Sex</th>
-                  <th>Born</th>
-                  <th>Died</th>
-                  <th>Mother</th>
-                  <th>Father</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr data-cy="person">
-                  <td>
-                    <a href="#/people/jan-van-brussel-1714">Jan van Brussel</a>
-                  </td>
-
-                  <td>m</td>
-                  <td>1714</td>
-                  <td>1748</td>
-                  <td>Joanna van Rooten</td>
-                  <td>Jacobus van Brussel</td>
-                </tr>
-
-                <tr data-cy="person">
-                  <td>
-                    <a href="#/people/philibert-haverbeke-1907">
-                      Philibert Haverbeke
-                    </a>
-                  </td>
-
-                  <td>m</td>
-                  <td>1907</td>
-                  <td>1997</td>
-
-                  <td>
-                    <a
-                      className="has-text-danger"
-                      href="#/people/emma-de-milliano-1876"
-                    >
-                      Emma de Milliano
-                    </a>
-                  </td>
-
-                  <td>
-                    <a href="#/people/emile-haverbeke-1877">Emile Haverbeke</a>
-                  </td>
-                </tr>
-
-                <tr data-cy="person" className="has-background-warning">
-                  <td>
-                    <a href="#/people/jan-frans-van-brussel-1761">
-                      Jan Frans van Brussel
-                    </a>
-                  </td>
-
-                  <td>m</td>
-                  <td>1761</td>
-                  <td>1833</td>
-                  <td>-</td>
-
-                  <td>
-                    <a href="#/people/jacobus-bernardus-van-brussel-1736">
-                      Jacobus Bernardus van Brussel
-                    </a>
-                  </td>
-                </tr>
-
-                <tr data-cy="person">
-                  <td>
-                    <a
-                      className="has-text-danger"
-                      href="#/people/lievijne-jans-1542"
-                    >
-                      Lievijne Jans
-                    </a>
-                  </td>
-
-                  <td>f</td>
-                  <td>1542</td>
-                  <td>1582</td>
-                  <td>-</td>
-                  <td>-</td>
-                </tr>
-
-                <tr data-cy="person">
-                  <td>
-                    <a href="#/people/bernardus-de-causmaecker-1721">
-                      Bernardus de Causmaecker
-                    </a>
-                  </td>
-
-                  <td>m</td>
-                  <td>1721</td>
-                  <td>1789</td>
-
-                  <td>
-                    <a
-                      className="has-text-danger"
-                      href="#/people/livina-haverbeke-1692"
-                    >
-                      Livina Haverbeke
-                    </a>
-                  </td>
-
-                  <td>
-                    <a href="#/people/lieven-de-causmaecker-1696">
-                      Lieven de Causmaecker
-                    </a>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+              Home
+            </Link>
+            <Link
+              to="/people"
+              className={`navbar-item ${urlInformation.pathname === '/people' ? 'has-background-grey-lighter' : ''}`}
+            >
+              People
+            </Link>
           </div>
         </div>
-      </div>
-    </main>
-  </div>
-);
+      </nav>
+
+      <main className="section">
+        <div className="container">
+          <Routes>
+            <Route path="/" element={<HomePage />}></Route>
+            <Route path="/people" element={<PeoplePage />}></Route>
+            <Route path="*" element={<PageDontFound />}></Route>
+          </Routes>
+        </div>
+      </main>
+    </div>
+  );
+};
