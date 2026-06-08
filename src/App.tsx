@@ -14,9 +14,7 @@ import Person from './types/Person';
 const HomePage = () => <h1 className="title">Home Page</h1>;
 
 const getApi = () => {
-  return fetch(
-    'https://mate-academy.github.io/react_people-table/api/people.json',
-  ).then(result => {
+  return fetch('../public/api/people.json').then(result => {
     if (!result.ok) {
       throw new Error('Erro no get');
     }
@@ -26,12 +24,12 @@ const getApi = () => {
 };
 
 export const App = () => {
-  const [peopleList, setPeopleList] = useState<Person>([]);
+  const [peopleList, setPeopleList] = useState<Person[]>([]);
   const urlInformation = useLocation();
   const [isLoading, setIsloading] = useState<boolean>(true);
   const [hasError, setHasError] = useState(false);
 
-  const foundPathernName = (nomeDoCaba: string | boolean) => {
+  const foundPathernName = (nomeDoCaba: string | null) => {
     const person = peopleList.find((r: Person) => r.name === nomeDoCaba);
 
     return person;
@@ -42,7 +40,7 @@ export const App = () => {
   };
 
   const getData = async () => {
-    let newData: Person = [];
+    let newData: Person[] = [];
 
     try {
       newData = await getApi();
