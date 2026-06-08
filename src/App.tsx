@@ -28,7 +28,6 @@ const getApi = () => {
 export const App = () => {
   const [peopleList, setPeopleList] = useState<Person>([]);
   const urlInformation = useLocation();
-  const [teste, setTeste] = useState<boolean>(true);
   const [isLoading, setIsloading] = useState<boolean>(true);
   const [hasError, setHasError] = useState(false);
 
@@ -60,11 +59,7 @@ export const App = () => {
     const { slug } = useParams();
 
     useEffect(() => {
-      if (teste === true) {
-        getData();
-      }
-
-      setTeste(false);
+      getData();
     }, []);
 
     return (
