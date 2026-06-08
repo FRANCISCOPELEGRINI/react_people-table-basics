@@ -38,7 +38,7 @@ export const App = () => {
     return person;
   };
 
-  const PageDontFound = () => {
+  const NotFoundPage = () => {
     return <h1 className="title">Page not found</h1>;
   };
 
@@ -190,9 +190,9 @@ export const App = () => {
           <Routes>
             <Route path="/" element={<HomePage />}></Route>
             <Route path="/people" element={<PeoplePage />}></Route>
-            <Route path="/home" element={<Navigate to="/" replace />} />
-            <Route path="*" element={<PageDontFound />}></Route>
             <Route path="/people/:slug" element={<PeoplePage />} />
+            <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFoundPage />}></Route>
           </Routes>
         </div>
       </main>
