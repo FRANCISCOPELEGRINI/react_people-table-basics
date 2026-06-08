@@ -1,11 +1,11 @@
-// import { Loader } from './components/Loader';
+import { Loader } from './components/Loader';
 import {
   Routes,
   Route,
   Link,
   useLocation,
   Navigate,
-  useNavigate,
+  useParams,
 } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import './App.scss';
@@ -13,10 +13,10 @@ import Person from './types/Person';
 
 const HomePage = () => <h1 className="title">Home Page</h1>;
 
-const PageDontFound = () => <h1 className="title">Page not found</h1>;
-
 const getApi = () => {
-  return fetch('../public/api/people.json').then(result => {
+  return fetch(
+    'https://mate-academy.github.io/react_people-table/api/people.json',
+  ).then(result => {
     if (!result.ok) {
       throw new Error('Erro no get');
     }
@@ -28,20 +28,18 @@ const getApi = () => {
 export const App = () => {
   const [peopleList, setPeopleList] = useState<Person>([]);
   const urlInformation = useLocation();
-  const [navigate, setNavigate] = useState<boolean>(true);
-  const possiblesUrls = ['/', '/people', '/home'];
-  const changeUrl = useNavigate();
-
-  useEffect(() => {
-    if (!possiblesUrls.includes(urlInformation.pathname)) {
-      changeUrl('/some/not/existing/page');
-    }
-  }, [urlInformation]);
+  const [teste, setTeste] = useState<boolean>(true);
+  const [isLoading, setIsloading] = useState<boolean>(true);
+  const [hasError, setHasError] = useState(false);
 
   const foundPathernName = (nomeDoCaba: string | boolean) => {
     const person = peopleList.find((r: Person) => r.name === nomeDoCaba);
 
     return person;
+  };
+
+  const PageDontFound = () => {
+    return <h1 className="title">Page not found</h1>;
   };
 
   const getData = async () => {
@@ -52,98 +50,110 @@ export const App = () => {
 
       setPeopleList(newData);
     } catch (e: unknown) {
-      throw new Error('Erro Try catch' + e);
+      setHasError(true);
+    } finally {
+      setIsloading(false);
     }
   };
 
-  useEffect(() => {
-    setNavigate(false);
-  }, []);
-
   const PeoplePage = () => {
+    const { slug } = useParams();
+
     useEffect(() => {
-      setNavigate(false);
-      getData();
+      if (teste === true) {
+        getData();
+      }
+
+      setTeste(false);
     }, []);
 
     return (
       <div className="block">
         <h1 className="title">People Page</h1>
         <div className="box table-container">
-          {/* <Loader /> */}
+          {!isLoading && !hasError && peopleList.length === 0 && (
+            <p data-cy="noPeopleMessage">There are no people on the server</p>
+          )}
+          {hasError && (
+            <p data-cy="peopleLoadingError" className="has-text-danger">
+              Something went wrong
+            </p>
+          )}
+          {!isLoading && !hasError ? (
+            <table
+              data-cy="peopleTable"
+              className="table is-striped is-hoverable is-narrow is-fullwidth"
+            >
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Sex</th>
+                  <th>Born</th>
+                  <th>Died</th>
+                  <th>Mother</th>
+                  <th>Father</th>
+                </tr>
+              </thead>
 
-          <p data-cy="peopleLoadingError" className="has-text-danger">
-            Something went wrong
-          </p>
+              <tbody>
+                {peopleList?.length > 0 && (
+                  <>
+                    {peopleList.map((todo: Person, index: number) => {
+                      return (
+                        <tr
+                          data-cy="person"
+                          key={index}
+                          className={
+                            todo.slug === slug ? 'has-background-warning' : ''
+                          }
+                        >
+                          <td>
+                            <Link
+                              to={`/people/${todo.slug}`}
+                              className={`${todo.sex === 'f' ? 'has-text-danger' : ''}`}
+                            >
+                              {todo.name}
+                            </Link>
+                          </td>
 
-          <p data-cy="noPeopleMessage">There are no people on the server</p>
+                          <td>{todo.sex}</td>
+                          <td>{todo.born}</td>
+                          <td>{todo.died}</td>
 
-          <table
-            data-cy="peopleTable"
-            className="table is-striped is-hoverable is-narrow is-fullwidth"
-          >
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Sex</th>
-                <th>Born</th>
-                <th>Died</th>
-                <th>Mother</th>
-                <th>Father</th>
-              </tr>
-            </thead>
+                          <td>
+                            {foundPathernName(todo.motherName) ? (
+                              <Link
+                                to={`/people/${foundPathernName(todo.motherName)?.slug}`}
+                                className="has-text-danger"
+                              >
+                                {todo.motherName}
+                              </Link>
+                            ) : (
+                              todo.motherName || '-'
+                            )}
+                          </td>
 
-            <tbody>
-              {peopleList?.length && (
-                <>
-                  {peopleList.map((todo: Person, index: number) => {
-                    return (
-                      <tr
-                        data-cy="person"
-                        key={index}
-                        className={
-                          foundPathernName(todo.motherName) === undefined ||
-                          foundPathernName(todo.fatherName === undefined)
-                            ? 'has-background-warning'
-                            : ''
-                        }
-                      >
-                        <td>
-                          <a
-                            href={`#/people/${todo.slug}`}
-                            className={`${todo.sex === 'f' ? 'has-text-danger' : ''}`}
-                          >
-                            {todo.name}
-                          </a>
-                        </td>
-
-                        <td>{todo.sex}</td>
-                        <td>{todo.born}</td>
-                        <td>{todo.died}</td>
-
-                        <td>
-                          <a
-                            className="has-text-danger"
-                            href={`#/people/${foundPathernName(todo.motherName) !== undefined ? foundPathernName(todo.motherName).slug : ''}`}
-                          >
-                            {todo.motherName || '-'}
-                          </a>
-                        </td>
-
-                        <td>
-                          <a
-                            href={`#/people/${foundPathernName(todo.fatherName) !== undefined ? foundPathernName(todo.fatherName).slug : ''}`}
-                          >
-                            {todo.fatherName || '-'}
-                          </a>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </>
-              )}
-            </tbody>
-          </table>
+                          <td>
+                            {foundPathernName(todo.fatherName) ? (
+                              <Link
+                                to={`/people/${foundPathernName(todo.fatherName)?.slug}`}
+                              >
+                                {todo.fatherName}
+                              </Link>
+                            ) : (
+                              todo.fatherName || '-'
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </>
+                )}
+              </tbody>
+            </table>
+          ) : (
+            <Loader />
+          )}
         </div>
       </div>
     );
@@ -151,7 +161,6 @@ export const App = () => {
 
   return (
     <div data-cy="app">
-      {navigate === true && <Navigate to="/"></Navigate>}
       <nav
         data-cy="nav"
         className="navbar is-fixed-top has-shadow"
@@ -168,7 +177,7 @@ export const App = () => {
             </Link>
             <Link
               to="/people"
-              className={`navbar-item ${urlInformation.pathname === '/people' ? 'has-background-grey-lighter' : ''}`}
+              className={`navbar-item ${urlInformation.pathname.startsWith('/people') ? 'has-background-grey-lighter' : ''}`}
             >
               People
             </Link>
@@ -181,7 +190,9 @@ export const App = () => {
           <Routes>
             <Route path="/" element={<HomePage />}></Route>
             <Route path="/people" element={<PeoplePage />}></Route>
+            <Route path="/home" element={<Navigate to="/" replace />} />
             <Route path="*" element={<PageDontFound />}></Route>
+            <Route path="/people/:slug" element={<PeoplePage />} />
           </Routes>
         </div>
       </main>
