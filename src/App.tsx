@@ -11,6 +11,11 @@ import { useState, useEffect } from 'react';
 import './App.scss';
 import Person from './types/Person';
 
+type PersonLinkProps = {
+  person: Person;
+  slug?: string;
+};
+
 const HomePage = () => <h1 className="title">Home Page</h1>;
 
 const getApi = () => {
@@ -53,6 +58,51 @@ export const App = () => {
     }
   };
 
+  const PersonLink = ({ person, slug }: PersonLinkProps) => {
+    return (
+      <tr
+        data-cy="person"
+        className={person.slug === slug ? 'has-background-warning' : ''}
+      >
+        <td>
+          <Link
+            to={`/people/${person.slug}`}
+            className={`${person.sex === 'f' ? 'has-text-danger' : ''}`}
+          >
+            {person.name}
+          </Link>
+        </td>
+
+        <td>{person.sex}</td>
+        <td>{person.born}</td>
+        <td>{person.died}</td>
+
+        <td>
+          {foundPathernName(person.motherName) ? (
+            <Link
+              to={`/people/${foundPathernName(person.motherName)?.slug}`}
+              className="has-text-danger"
+            >
+              {person.motherName}
+            </Link>
+          ) : (
+            person.motherName || '-'
+          )}
+        </td>
+
+        <td>
+          {foundPathernName(person.fatherName) ? (
+            <Link to={`/people/${foundPathernName(person.fatherName)?.slug}`}>
+              {person.fatherName}
+            </Link>
+          ) : (
+            person.fatherName || '-'
+          )}
+        </td>
+      </tr>
+    );
+  };
+
   const PeoplePage = () => {
     const { slug } = useParams();
 
@@ -91,55 +141,60 @@ export const App = () => {
               <tbody>
                 {peopleList?.length > 0 && (
                   <>
-                    {peopleList.map((todo: Person, index: number) => {
-                      return (
-                        <tr
-                          data-cy="person"
-                          key={index}
-                          className={
-                            todo.slug === slug ? 'has-background-warning' : ''
-                          }
-                        >
-                          <td>
-                            <Link
-                              to={`/people/${todo.slug}`}
-                              className={`${todo.sex === 'f' ? 'has-text-danger' : ''}`}
-                            >
-                              {todo.name}
-                            </Link>
-                          </td>
-
-                          <td>{todo.sex}</td>
-                          <td>{todo.born}</td>
-                          <td>{todo.died}</td>
-
-                          <td>
-                            {foundPathernName(todo.motherName) ? (
+                    {peopleList.map((todo: Person, index: number) => (
+                      <>
+                        {todo.slug === slug ? (
+                          <PersonLink person={todo} slug={slug}></PersonLink>
+                        ) : (
+                          <tr
+                            data-cy="person"
+                            key={index}
+                            className={
+                              todo.slug === slug ? 'has-background-warning' : ''
+                            }
+                          >
+                            <td>
                               <Link
-                                to={`/people/${foundPathernName(todo.motherName)?.slug}`}
-                                className="has-text-danger"
+                                to={`/people/${todo.slug}`}
+                                className={`${todo.sex === 'f' ? 'has-text-danger' : ''}`}
                               >
-                                {todo.motherName}
+                                {todo.name}
                               </Link>
-                            ) : (
-                              todo.motherName || '-'
-                            )}
-                          </td>
+                            </td>
 
-                          <td>
-                            {foundPathernName(todo.fatherName) ? (
-                              <Link
-                                to={`/people/${foundPathernName(todo.fatherName)?.slug}`}
-                              >
-                                {todo.fatherName}
-                              </Link>
-                            ) : (
-                              todo.fatherName || '-'
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                            <td>{todo.sex}</td>
+                            <td>{todo.born}</td>
+                            <td>{todo.died}</td>
+
+                            <td>
+                              {foundPathernName(todo.motherName) ? (
+                                <Link
+                                  to={`/people/${foundPathernName(todo.motherName)?.slug}`}
+                                  className="has-text-danger"
+                                >
+                                  {todo.motherName}
+                                </Link>
+                              ) : (
+                                todo.motherName || '-'
+                              )}
+                            </td>
+
+                            <td>
+                              {foundPathernName(todo.fatherName) ? (
+                                <Link
+                                  to={`/people/${foundPathernName(todo.fatherName)?.slug}`}
+                                >
+                                  {todo.fatherName}
+                                </Link>
+                              ) : (
+                                todo.fatherName || '-'
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                        ;
+                      </>
+                    ))}
                   </>
                 )}
               </tbody>
